@@ -1,6 +1,6 @@
 {
   "name": "@keepass-web/argon2",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Argon2d and Argon2id key derivation function implementation for keepass-web.",
   "license": "MIT",
