@@ -15,10 +15,11 @@
   },
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/src/index.js"
   },
-  "types": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
   "files": [
+    "dist",
     "src",
     "SPEC.md"
   ],
@@ -26,6 +27,8 @@
     "access": "public"
   },
   "scripts": {
+    "prebuild": "node --eval \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "tsc --project tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "format": "biome format --write .",
