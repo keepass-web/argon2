@@ -1,9 +1,30 @@
 {
   "name": "@keepass-web/argon2",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Argon2d and Argon2id key derivation function implementation for keepass-web.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keepass-web/argon2.git"
+  },
+  "homepage": "https://github.com/keepass-web/argon2#readme",
+  "bugs": "https://github.com/keepass-web/argon2/issues",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "files": [
+    "src",
+    "SPEC.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",

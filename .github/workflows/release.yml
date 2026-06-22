@@ -1,0 +1,29 @@
+name: Release
+
+# Publishes to npm with provenance via trusted publishing (OIDC).
+# Triggered by pushing a version tag, e.g.:
+#
+#   npm version minor        # bumps package.json and creates the tag
+#   git push --follow-tags
+#
+# The reusable workflow verifies the tag matches package.json, re-runs the
+# full CI checks, and publishes. npm authorizes THIS caller workflow
+# (keepass-web/<repo> + release.yml), so the trusted publisher on npmjs.com
+# must be configured against this file.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+# No permissions by default.
+permissions: {}
+
+jobs:
+  release:
+    # Granted to the called workflow: id-token is required for OIDC/provenance.
+    permissions:
+      contents: read
+      id-token: write
+    uses: keepass-web/build/.github/workflows/release.yml@main
+    secrets: inherit
