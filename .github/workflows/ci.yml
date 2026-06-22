@@ -1,0 +1,12 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    uses: keepass-web/build/.github/workflows/ci.yml@main
+    with:
+      app-repo: false
+    secrets: inherit
