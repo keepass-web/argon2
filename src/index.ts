@@ -8,9 +8,9 @@
 
 import { ARGON2_D, ARGON2_ID, ARGON2_VERSION_13, argon2Core } from './argon2.ts';
 
-const MAX_U24 = 0xffffff;
-const MAX_U32 = 0xffffffff;
-const EMPTY = new Uint8Array(0);
+const A2_MAX_U24 = 0xffffff;
+const A2_MAX_U32 = 0xffffffff;
+const A2_EMPTY = new Uint8Array(0);
 
 /** Argon2 variant. */
 export type Argon2Type = 'argon2d' | 'argon2id';
@@ -42,17 +42,17 @@ export interface Argon2Options {
 /** Options for {@link argon2d} / {@link argon2id} (no `type` field). */
 export type Argon2VariantOptions = Omit<Argon2Options, 'type'>;
 
-function requireInteger(name: string, value: number, min: number, max: number): void {
+function a2_requireInteger(name: string, value: number, min: number, max: number): void {
   if (!Number.isInteger(value) || value < min || value > max) {
     throw new RangeError(`${name} must be an integer in ${min}..${max}, got ${value}`);
   }
 }
 
-function requireBytes(name: string, value: Uint8Array): void {
+function a2_requireBytes(name: string, value: Uint8Array): void {
   if (!(value instanceof Uint8Array)) {
     throw new TypeError(`${name} must be a Uint8Array`);
   }
-  if (value.length > MAX_U32) {
+  if (value.length > A2_MAX_U32) {
     throw new RangeError(`${name} must be at most 2^32-1 bytes`);
   }
 }
@@ -64,8 +64,8 @@ function requireBytes(name: string, value: Uint8Array): void {
  */
 export function argon2(options: Argon2Options): Uint8Array {
   const { password, salt, type } = options;
-  const secret = options.secret ?? EMPTY;
-  const associatedData = options.associatedData ?? EMPTY;
+  const secret = options.secret ?? A2_EMPTY;
+  const associatedData = options.associatedData ?? A2_EMPTY;
   const version = options.version ?? ARGON2_VERSION_13;
 
   if (type !== 'argon2d' && type !== 'argon2id') {
@@ -74,14 +74,14 @@ export function argon2(options: Argon2Options): Uint8Array {
   if (version !== 0x10 && version !== 0x13) {
     throw new RangeError(`version must be 0x10 or 0x13, got ${version}`);
   }
-  requireBytes('password', password);
-  requireBytes('salt', salt);
-  requireBytes('secret', secret);
-  requireBytes('associatedData', associatedData);
-  requireInteger('parallelism', options.parallelism, 1, MAX_U24);
-  requireInteger('iterations', options.iterations, 1, MAX_U32);
-  requireInteger('tagLength', options.tagLength, 4, MAX_U32);
-  requireInteger('memory', options.memory, 8 * options.parallelism, MAX_U32);
+  a2_requireBytes('password', password);
+  a2_requireBytes('salt', salt);
+  a2_requireBytes('secret', secret);
+  a2_requireBytes('associatedData', associatedData);
+  a2_requireInteger('parallelism', options.parallelism, 1, A2_MAX_U24);
+  a2_requireInteger('iterations', options.iterations, 1, A2_MAX_U32);
+  a2_requireInteger('tagLength', options.tagLength, 4, A2_MAX_U32);
+  a2_requireInteger('memory', options.memory, 8 * options.parallelism, A2_MAX_U32);
 
   return argon2Core({
     password,

@@ -7,10 +7,10 @@
  * with `bigint` for correctness; see SPEC.md for the optimization trade-off.
  */
 
-const MASK64 = (1n << 64n) - 1n;
+const B2_MASK64 = (1n << 64n) - 1n;
 
 /** BLAKE2b initialization vector (RFC 7693, Section 2.6). */
-const IV: readonly bigint[] = [
+const B2_IV: readonly bigint[] = [
   0x6a09e667f3bcc908n,
   0xbb67ae8584caa73bn,
   0x3c6ef372fe94f82bn,
@@ -22,7 +22,7 @@ const IV: readonly bigint[] = [
 ];
 
 /** Message word schedule per round (RFC 7693, Section 2.7). */
-const SIGMA: readonly (readonly number[])[] = [
+const B2_SIGMA: readonly (readonly number[])[] = [
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
   [14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3],
   [11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4],
@@ -37,24 +37,24 @@ const SIGMA: readonly (readonly number[])[] = [
   [14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3],
 ];
 
-function rotr64(x: bigint, n: bigint): bigint {
-  return ((x >> n) | (x << (64n - n))) & MASK64;
+function b2_rotr64(x: bigint, n: bigint): bigint {
+  return ((x >> n) | (x << (64n - n))) & B2_MASK64;
 }
 
 /** The BLAKE2b mixing function G (RFC 7693, Section 3.1). */
-function mix(v: bigint[], a: number, b: number, c: number, d: number, x: bigint, y: bigint): void {
+function b2_mix(v: bigint[], a: number, b: number, c: number, d: number, x: bigint, y: bigint): void {
   let va = v[a] as bigint;
   let vb = v[b] as bigint;
   let vc = v[c] as bigint;
   let vd = v[d] as bigint;
-  va = (va + vb + x) & MASK64;
-  vd = rotr64(vd ^ va, 32n);
-  vc = (vc + vd) & MASK64;
-  vb = rotr64(vb ^ vc, 24n);
-  va = (va + vb + y) & MASK64;
-  vd = rotr64(vd ^ va, 16n);
-  vc = (vc + vd) & MASK64;
-  vb = rotr64(vb ^ vc, 63n);
+  va = (va + vb + x) & B2_MASK64;
+  vd = b2_rotr64(vd ^ va, 32n);
+  vc = (vc + vd) & B2_MASK64;
+  vb = b2_rotr64(vb ^ vc, 24n);
+  va = (va + vb + y) & B2_MASK64;
+  vd = b2_rotr64(vd ^ va, 16n);
+  vc = (vc + vd) & B2_MASK64;
+  vb = b2_rotr64(vb ^ vc, 63n);
   v[a] = va;
   v[b] = vb;
   v[c] = vc;
@@ -62,28 +62,28 @@ function mix(v: bigint[], a: number, b: number, c: number, d: number, x: bigint,
 }
 
 /** The BLAKE2b compression function F (RFC 7693, Section 3.2). */
-function compress(h: bigint[], m: bigint[], counter: bigint, last: boolean): void {
+function b2_compress(h: bigint[], m: bigint[], counter: bigint, last: boolean): void {
   const v = new Array<bigint>(16);
   for (let i = 0; i < 8; i++) {
     v[i] = h[i] as bigint;
-    v[i + 8] = IV[i] as bigint;
+    v[i + 8] = B2_IV[i] as bigint;
   }
-  v[12] = (v[12] as bigint) ^ (counter & MASK64);
-  v[13] = (v[13] as bigint) ^ ((counter >> 64n) & MASK64);
+  v[12] = (v[12] as bigint) ^ (counter & B2_MASK64);
+  v[13] = (v[13] as bigint) ^ ((counter >> 64n) & B2_MASK64);
   if (last) {
-    v[14] = (v[14] as bigint) ^ MASK64;
+    v[14] = (v[14] as bigint) ^ B2_MASK64;
   }
   for (let r = 0; r < 12; r++) {
-    const s = SIGMA[r] as readonly number[];
+    const s = B2_SIGMA[r] as readonly number[];
     const w = (k: number): bigint => m[s[k] as number] as bigint;
-    mix(v, 0, 4, 8, 12, w(0), w(1));
-    mix(v, 1, 5, 9, 13, w(2), w(3));
-    mix(v, 2, 6, 10, 14, w(4), w(5));
-    mix(v, 3, 7, 11, 15, w(6), w(7));
-    mix(v, 0, 5, 10, 15, w(8), w(9));
-    mix(v, 1, 6, 11, 12, w(10), w(11));
-    mix(v, 2, 7, 8, 13, w(12), w(13));
-    mix(v, 3, 4, 9, 14, w(14), w(15));
+    b2_mix(v, 0, 4, 8, 12, w(0), w(1));
+    b2_mix(v, 1, 5, 9, 13, w(2), w(3));
+    b2_mix(v, 2, 6, 10, 14, w(4), w(5));
+    b2_mix(v, 3, 7, 11, 15, w(6), w(7));
+    b2_mix(v, 0, 5, 10, 15, w(8), w(9));
+    b2_mix(v, 1, 6, 11, 12, w(10), w(11));
+    b2_mix(v, 2, 7, 8, 13, w(12), w(13));
+    b2_mix(v, 3, 4, 9, 14, w(14), w(15));
   }
   for (let i = 0; i < 8; i++) {
     h[i] = (h[i] as bigint) ^ (v[i] as bigint) ^ (v[i + 8] as bigint);
@@ -102,7 +102,7 @@ export function blake2b(outLength: number, input: Uint8Array): Uint8Array {
   }
 
   // Parameter block: digest length, key length (0), fanout (1), depth (1).
-  const h = IV.slice();
+  const h = B2_IV.slice();
   h[0] = (h[0] as bigint) ^ 0x01010000n ^ BigInt(outLength);
 
   // Process all full 128-byte blocks except the final one.
@@ -127,7 +127,7 @@ export function blake2b(outLength: number, input: Uint8Array): Uint8Array {
   while (input.length - offset > 128) {
     loadBlock(offset);
     counter += 128n;
-    compress(h, block, counter, false);
+    b2_compress(h, block, counter, false);
     offset += 128;
   }
 
@@ -135,7 +135,7 @@ export function blake2b(outLength: number, input: Uint8Array): Uint8Array {
   const remaining = input.length - offset;
   counter += BigInt(remaining);
   loadBlock(offset);
-  compress(h, block, counter, true);
+  b2_compress(h, block, counter, true);
 
   // Serialize the first `outLength` bytes of the state, little-endian.
   const out = new Uint8Array(outLength);
